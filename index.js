@@ -50,14 +50,3 @@ bot.hears('/clear', clear)
 bot.launch()
 
 bot.on('message', ({ message }) => history.push({ ...message, time: moment().toISOString() }))
-
-const reportBot = async bot => {
-  try {
-    const botInfo = await bot.telegram.getMe()
-    console.log(botInfo)
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-reportBot(bot)
