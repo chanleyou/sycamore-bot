@@ -6,6 +6,8 @@ dotenv.config()
 
 const bot = new Telegraf('775734716:AAE6_n7gg045GDpCtDH6_vugPpXfKGYG8Fo')
 
+const MESSAGE_DELETE_HOURS = 36
+
 let interval = null
 let history = []
 
@@ -24,7 +26,7 @@ const clearHistory = ({ deleteMessage }) => {
   clone.forEach(({ message_id, time }) => {
     if (
       moment(time)
-        .add(36, 'hours')
+        .add(MESSAGE_DELETE_HOURS, 'hours')
         .isBefore(moment())
     ) {
       try {
@@ -40,7 +42,7 @@ const clearHistory = ({ deleteMessage }) => {
 bot.start(ctx => {
   if (interval) clearInterval(interval)
   ctx.reply(
-    'Sycamore Safety Bot initialized. Chat messages (not pictures, videos, etc.) now self-destruct after 24 hours.\nAlternatively, type /clear to manually clear chat history.'
+    `Sycamore Safety Bot initialized. Chat messages (not pictures, videos, etc.) now self-destruct after ${MESSAGE_DELETE_HOURS} hours.\nAlternatively, type /clear to manually clear chat history.`
   )
   interval = setInterval(() => {
     clearHistory(ctx)
