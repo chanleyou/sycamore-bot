@@ -20,7 +20,7 @@ const clearHistory = ({ deleteMessage }) => {
   clone.forEach(({ message_id, time }) => {
     if (
       moment(time)
-        .add(40, 'hours')
+        .add(10, 'seconds')
         .isBefore(moment())
     ) {
       deleteMessage(message_id)
@@ -38,7 +38,7 @@ bot.start(ctx => {
   }
   interval = setInterval(() => {
     clearHistory(ctx)
-  }, moment.duration(1, 'hours').asMilliseconds())
+  }, moment.duration(10, 'seconds').asMilliseconds())
 })
 
 bot.hears('/clear', clear)
