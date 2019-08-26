@@ -6,6 +6,7 @@ dotenv.config()
 
 const bot = new Telegraf('775734716:AAE6_n7gg045GDpCtDH6_vugPpXfKGYG8Fo')
 
+let interval = null
 let history = []
 
 const clear = ({ message, deleteMessage }) => {
@@ -19,7 +20,7 @@ const clearHistory = ({ deleteMessage }) => {
   clone.forEach(({ message_id, time }) => {
     if (
       moment(time)
-        .add(24, 'hours')
+        .add(40, 'hours')
         .isBefore(moment())
     ) {
       deleteMessage(message_id)
@@ -31,7 +32,11 @@ const clearHistory = ({ deleteMessage }) => {
 
 bot.start(ctx => {
   ctx.reply('Initialising...')
-  setInterval(() => {
+  if (interval) {
+    clearInterval(interval)
+    ctx.reply('Clearing previous interval...')
+  }
+  interval = setInterval(() => {
     clearHistory(ctx)
   }, moment.duration(1, 'hours').asMilliseconds())
 })
