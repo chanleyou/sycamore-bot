@@ -12,7 +12,11 @@ let history = []
 const clear = ({ message, deleteMessage }) => {
   history.forEach(({ message_id }) => deleteMessage(message_id))
   history = []
-  deleteMessage(message.id)
+  try {
+    deleteMessage(message.id)
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 const clearHistory = ({ deleteMessage }) => {
@@ -20,25 +24,27 @@ const clearHistory = ({ deleteMessage }) => {
   clone.forEach(({ message_id, time }) => {
     if (
       moment(time)
-        .add(10, 'seconds')
+        .add(36, 'hours')
         .isBefore(moment())
     ) {
-      deleteMessage(message_id)
-      let index = history.findIndex(message => message.message_id === message_id)
-      if (index > -1) history.splice(index, 1)
+      try {
+        deleteMessage(message_id)
+      } finally {
+        let index = history.findIndex(message => message.message_id === message_id)
+        if (index > -1) history.splice(index, 1)
+      }
     }
   })
 }
 
 bot.start(ctx => {
-  ctx.reply('Initialising...')
-  if (interval) {
-    clearInterval(interval)
-    ctx.reply('Clearing previous interval...')
-  }
+  if (interval) clearInterval(interval)
+  ctx.reply(
+    'Sycamore Safety Bot initialized. Chat messages (not pictures, videos, etc.) now self-destruct after 24 hours.\nAlternatively, type /clear to manually clear chat history.'
+  )
   interval = setInterval(() => {
     clearHistory(ctx)
-  }, moment.duration(10, 'seconds').asMilliseconds())
+  }, moment.duration(1, 'hour').asMilliseconds())
 })
 
 bot.hears('/clear', clear)
