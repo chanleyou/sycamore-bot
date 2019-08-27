@@ -1,8 +1,10 @@
 const Telegraf = require('telegraf')
 const moment = require('moment')
 
-const dotenv = require('dotenv')
-dotenv.config()
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = require('dotenv')
+  dotenv.config()
+}
 
 const bot = new Telegraf(process.env.API_KEY)
 
