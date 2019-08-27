@@ -1,65 +1,81 @@
 const Telegraf = require('telegraf')
 const moment = require('moment')
-const dotenv = require('dotenv')
 
+const dotenv = require('dotenv')
 dotenv.config()
 
-const bot = new Telegraf('775734716:AAE6_n7gg045GDpCtDH6_vugPpXfKGYG8Fo')
+const bot = new Telegraf(process.env.API_KEY)
 
 const MESSAGE_DELETE_HOURS = 36
+const CLEAR_INTERVAL = moment.duration(1, 'hour').asMilliseconds()
+const ADMIN_ID = 428148796
 
-let interval = null
-let history = []
+let store = [] // TODO: persistent cache?
 
-const clear = ({ message, deleteMessage }) => {
-  history.forEach(({ message_id }) => deleteMessage(message_id))
-  history = []
-  try {
-    deleteMessage(message.id)
-  } catch (e) {
-    console.log(e)
-  }
+const _deleteMessage = ({ chat_id, message_id }, index) => {
+  bot.telegram.deleteMessage(chat_id, message_id)
+  store.splice(index, 1)
 }
 
-const clearHistory = ({ deleteMessage }) => {
-  const clone = [...history]
-  clone.forEach(({ message_id, time }) => {
-    if (
-      moment(time)
-        .add(MESSAGE_DELETE_HOURS, 'hours')
-        .isBefore(moment())
-    ) {
-      try {
-        deleteMessage(message_id)
-      } finally {
-        let index = history.findIndex(message => message.message_id === message_id)
-        if (index > -1) history.splice(index, 1)
-      }
-    }
-  })
+const _recordMessage = ({ message, chat }) => {
+  const { message_id } = message
+  const { id: chat_id } = chat
+  // const { text } = message
+  // const { username } = message.from
+  store.push({ message_id, chat_id, /* username, text, */ timestamp: moment().toISOString() })
 }
 
-bot.start(ctx => {
-  if (interval) clearInterval(interval)
-  ctx.reply(
-    `Sycamore Safety Bot initialized. Chat messages (not pictures, videos, etc.) now self-destruct after ${MESSAGE_DELETE_HOURS} hours.\nAlternatively, type /clear to manually clear chat history.`
-  )
-  interval = setInterval(() => {
-    clearHistory(ctx)
-  }, moment.duration(1, 'hour').asMilliseconds())
+const _recordBotReply = ({ message_id, chat }) => {
+  const { id: chat_id } = chat
+  store.push({ message_id, chat_id, timestamp: moment().toISOString() })
+}
+
+const _clearMessages = ({ message, chat, deleteMessage }) => {
+  const clone = [...store]
+  clone.filter(({ chat_id }) => chat_id === chat.id).forEach(_deleteMessage)
+  store = []
+  deleteMessage(message.message_id)
+}
+
+bot.start(({ reply }) => {
+  reply(
+    `Hello! this bot automatically deletes messages that are ${MESSAGE_DELETE_HOURS} hours old (requires admin permissions for groups). You can also type /clear to manually clear chat history for this chat.`
+  ).then(_recordBotReply)
 })
 
-bot.hears('/clear', clear)
+bot.command('clear', _clearMessages)
 
-// bot.hears('/report', ({ message, reply }) => {
-//   reply(message)
-//   reply(`Reporting: ${history.length} message(s) stored...`)
-//   history.forEach(message => {
-//     const messageJSON = JSON.stringify(message)
-//     reply(messageJSON)
-//   })
-// })
+bot.command('report', ({ message, reply }) => {
+  const { id } = message.from
+  if (id !== ADMIN_ID) {
+    reply('Sorry, only an admin (LY) can use this command.').then(_recordBotReply)
+    return
+  }
+
+  reply(`Reporting store: ${store.length} ${store.length === 1 ? 'message' : 'messages'}.`).then(
+    _recordBotReply
+  )
+  store.forEach(message =>
+    reply(
+      Object.entries(message)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ')
+    ).then(_recordBotReply)
+  )
+})
+
+bot.on('message', _recordMessage)
 
 bot.launch()
 
-bot.on('message', ({ message }) => history.push({ ...message, time: moment().toISOString() }))
+setInterval(() => {
+  const now = moment()
+  const clone = [...store]
+  clone
+    .filter(({ timestamp }) =>
+      moment(timestamp)
+        .add(MESSAGE_DELETE_HOURS, 'seconds')
+        .isBefore(now)
+    )
+    .forEach(_deleteMessage)
+}, CLEAR_INTERVAL)
