@@ -16,10 +16,15 @@ export const recordMiddleware: Middleware = ({ message, chat }, next) => {
 }
 
 export const replyMiddleware: Middleware = (ctx, next) => {
+  const { message } = ctx
   const originalReply = ctx.reply.bind(ctx)
+  const options = {
+    parse_mode: 'HTML',
+    reply_to_message_id: message.message_id,
+  }
 
-  ctx.reply = function(...input: any) {
-    originalReply(...input).then(({ message_id, chat }: any) => {
+  ctx.reply = function(text: string) {
+    originalReply(text, options).then(({ message_id, chat }: any) => {
       rpush(message_id, chat.id)
     })
   }

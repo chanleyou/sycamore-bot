@@ -89,9 +89,7 @@ export const report = async ({ message, reply }: Context) => {
     return
   }
   const length = await llen()
-  reply(`${length} ${length === 1 ? 'message' : 'messages'} cached.`, {
-    reply_to_message_id: message.message_id,
-  })
+  reply(`${length} ${length === 1 ? 'message' : 'messages'} cached.`)
 }
 
 export const instructions = ({ message, reply }: Context) => {
@@ -99,11 +97,46 @@ export const instructions = ({ message, reply }: Context) => {
   const deleteUnit = deleteTimeout === 1 ? 'hour' : 'hours'
   const clearInterval = CLEAR_INTERVAL.asHours()
   const clearUnit = clearInterval === 1 ? 'hour' : 'hours'
+
+  const commands = {
+    help: '',
+    code: 'delete all messages',
+    shouldi: 'decide between multiple choices',
+  }
+
+  const commandsMarkdown = Object.entries(commands)
+    .map(([key, value]) => ` • <code>${key}</code> ${value}`)
+    .join('\n')
+
   reply(
-    `Hello! Sycamore Bot automatically deletes messages older than ${deleteTimeout} ${deleteUnit} every ${clearInterval} ${clearUnit}.\n\n<b>Commands:</b>\n • <code>/clear</code> delete all messages\n • <code>/help</code>`,
-    {
-      parse_mode: 'HTML',
-      reply_to_message_id: message.message_id,
-    }
+    `Hello! Sycamore Bot automatically deletes messages older than ${deleteTimeout} ${deleteUnit} every ${clearInterval} ${clearUnit}.\n\n<b>Commands:</b>\n${commandsMarkdown}`
   )
+}
+
+export const decide = ({ message, reply }: Context) => {
+  const { text } = message
+  const choices = text
+    .split(' ')
+    .reduce(
+      (acc, word) => {
+        if (word.toLowerCase() === '/shouldi') return acc
+        if (word.toLowerCase() === 'or') return [...acc, []]
+        else {
+          let clone = [...acc]
+          clone[clone.length - 1].push(word)
+          return clone
+        }
+      },
+      [[]]
+    )
+    .map(sentence => sentence.join(' '))
+
+  if (choices.length < 2) {
+    return reply(
+      `Sorry, I didn't understand your message. State the choices clearly with <code>or</code> in between.`
+    )
+  }
+
+  const suggestion = choices[Math.floor(Math.random() * choices.length)]
+  return reply(`I think you should ${suggestion}!`)
 }
