@@ -1,12 +1,6 @@
 import moment from 'moment'
-import { Context } from 'telegraf'
-import cache from './cache'
-
-type Middleware = (ctx: Context, next: Function) => void
-
-interface ContextWithReply extends Context {
-  reply: Function
-}
+import { Middleware } from './types'
+import { cache } from '.'
 
 export const recordMiddleware: Middleware = (ctx, next) => {
   const { message, chat } = ctx
@@ -17,12 +11,7 @@ export const recordMiddleware: Middleware = (ctx, next) => {
   next()
 }
 
-export const replyMiddleware: Middleware = (ctx: ContextWithReply, next) => {
-  const { reply } = ctx
-  if (reply == null) {
-    return next()
-  }
-
+export const replyMiddleware: Middleware = (ctx, next) => {
   const originalReply = ctx.reply.bind(ctx)
 
   ctx.reply = function(...input: any) {
