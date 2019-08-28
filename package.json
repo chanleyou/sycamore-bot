@@ -17,8 +17,9 @@
     "typescript": "^3.5.3"
   },
   "scripts": {
-    "start": "tsc && set \"NODE_ENV=production\" && node dist/index.js",
-    "dev": "tsc && set \"NODE_ENV=development\" && node dist/index.js"
+    "start": "set \"NODE_ENV=production\" && node dist/index.js",
+    "dev": "tsc && set \"NODE_ENV=development\" && node dist/index.js",
+    "postinstall": "tsc"
   },
   "author": "",
   "license": "ISC"
