@@ -4,18 +4,21 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/redis": "^2.8.13",
     "dotenv": "^8.1.0",
     "moment": "^2.24.0",
+    "redis": "^2.8.0",
     "telegraf": "^3.32.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
-    "eslint": "^6.2.2"
+    "eslint": "^6.2.2",
+    "typescript": "^3.5.3"
   },
   "scripts": {
-    "start": "set \"NODE_ENV=production\" && node index.js",
-    "dev": "set \"NODE_ENV=development\" && nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc && set \"NODE_ENV=production\" && node dist/index.js",
+    "dev": "tsc && set \"NODE_ENV=development\" && node dist/index.js"
   },
   "author": "",
   "license": "ISC"
