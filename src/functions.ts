@@ -3,7 +3,7 @@ import { Context } from './types'
 import { cache, telegram } from '.'
 import { MESSAGE_DELETE_TIMEOUT, CLEAR_INTERVAL } from './constants'
 
-export const llen = () => {
+export const llen = (): Promise<number> => {
   return new Promise((resolve, reject) => {
     cache.llen('store', (e, len) => {
       if (e) return reject(e)
@@ -12,13 +12,10 @@ export const llen = () => {
   })
 }
 
-export const lindex = (i: number): Promise<string> => {
+export const lindex = (i: number): Promise<string | null> => {
   return new Promise((resolve, reject) => {
     cache.lindex('store', i, (e, message) => {
       if (e) return reject(e)
-      if (message == null) {
-        return reject(new Error(`No message found at index '${i}'.`))
-      }
       return resolve(message)
     })
   })
@@ -27,61 +24,49 @@ export const lindex = (i: number): Promise<string> => {
 export const lpop = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     cache.lpop('store', (e, message) => {
-      if (e) reject(e)
-      if (message == null) reject(new Error('List empty.'))
+      if (e) return reject(e)
+      if (message == null) return resolve(null)
       return resolve(message)
     })
   })
 }
 
+export const lrange = (
+  start: number = 0,
+  end: number = -1
+): Promise<string[]> => {
+  return new Promise((resolve, reject) => {
+    cache.lrange('store', start, end, (e, messages) => {
+      if (e) return reject(e)
+      return resolve(messages)
+    })
+  })
+}
+
+const deleteMessage = (chat_id: string | number, message_id: string | number) =>
+  telegram.deleteMessage(chat_id, message_id).catch(console.log)
+
 export const clearChatMessages = async (ctx: Context) => {
   const { chat } = ctx
   const { id } = chat
 
-  const length = await llen()
+  const messages = await lrange()
 
-  const toRemove: string[] = []
-
-  for (let i = 0; i < length; i++) {
-    let message
-    try {
-      message = await lindex(i)
-    } catch (e) {
-      console.log(e)
-    }
-    if (message == null) continue
+  messages.forEach(message => {
     const [message_id, chat_id] = message.split(',')
     if (chat_id === id.toString()) {
-      try {
-        telegram.deleteMessage(chat_id, parseInt(message_id))
-      } catch (e) {
-        console.log(e)
-      } finally {
-        toRemove.push(message)
-      }
+      deleteMessage(chat_id, parseInt(message_id))
+      cache.lrem('store', 1, message)
     }
-  }
-
-  toRemove.forEach(message => cache.lrem('store', 1, message))
+  })
 }
 
 export const clearOldMessages = async () => {
   const now = moment()
+  let message = await lpop()
 
-  while (true) {
-    let message
-    try {
-      message = await lpop()
-    } catch (e) {
-      if (e.message === 'List empty.') return
-      console.log(e)
-      return
-    }
-
-    if (message == null) return
-
+  while (message != null) {
     const [message_id, chat_id, timestamp] = message.split(',')
-
     if (
       moment(timestamp)
         .add(MESSAGE_DELETE_TIMEOUT)
@@ -90,16 +75,12 @@ export const clearOldMessages = async () => {
       cache.lpush('store', message)
       return
     }
-
-    try {
-      telegram.deleteMessage(chat_id, message_id)
-    } catch (e) {
-      console.log(e)
-    }
+    deleteMessage(chat_id, message_id)
+    message = await lpop()
   }
 }
 
-export const report = ({ message, reply }: Context) => {
+export const report = async ({ message, reply }: Context) => {
   const { id } = message.from
   if (id.toString() !== process.env.ADMIN_ID) {
     reply('Sorry, only the big boss can use this command.', {
@@ -107,10 +88,9 @@ export const report = ({ message, reply }: Context) => {
     })
     return
   }
-  cache.llen('store', (e, len) => {
-    reply(`${len} ${len === 1 ? 'message' : 'messages'} cached.`, {
-      reply_to_message_id: message.message_id,
-    })
+  const length = await llen()
+  reply(`${length} ${length === 1 ? 'message' : 'messages'} cached.`, {
+    reply_to_message_id: message.message_id,
   })
 }
 

@@ -14,6 +14,7 @@ import {
 if (process.env.NODE_ENV === 'development') dotenv.config()
 
 export const cache = redis.createClient(process.env.REDIS_URL)
+cache.on('error', e => console.log(`Error: ${e}`))
 
 export const bot = new Telegraf(process.env.API_KEY)
 export const telegram = new Telegram(process.env.API_KEY)
