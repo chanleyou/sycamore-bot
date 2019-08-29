@@ -23,14 +23,15 @@ export const replyMiddleware: Middleware = (ctx, next) => {
     reply_to_message_id: message.message_id,
   }
 
-  ctx.reply = function(text: string) {
-    originalReply(text, options).then((message: any) => {
-      if (message != null) {
-        const { message_id, chat } = message
-        rpush(message_id, chat.id)
-      }
-      else console.log(message)
-    },catch(e => console.log(`Error: ${e}`)) 
+  ctx.reply = async function(text: string) {
+    try {
+      const reply = await originalReply(text, options)
+      if (reply == null) return
+      const { message_id, chat } = reply
+      rpush(message_id, chat.id)
+    } catch (e) {
+      console.log(`Error: ${e}`)
+    } 
   }
-  return next()
+  next()
 }
