@@ -17,6 +17,7 @@ export const recordMiddleware: Middleware = ({ message, chat }, next) => {
 
 export const replyMiddleware: Middleware = (ctx, next) => {
   const { message } = ctx
+  if (message == null) return next()
   const originalReply = ctx.reply.bind(ctx)
   const options = {
     parse_mode: 'HTML',
