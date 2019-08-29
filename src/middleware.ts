@@ -25,7 +25,10 @@ export const replyMiddleware: Middleware = (ctx, next) => {
 
   ctx.reply = function(text: string) {
     originalReply(text, options).then((message: any) => {
-      if (message != null) rpush(message_id, chat.id)
+      if (message != null) {
+        const { message_id, chat } = message
+        rpush(message_id, chat.id)
+      }
       else console.log(message)
     },catch(e => console.log(`Error: ${e}`)) 
   }
