@@ -83,16 +83,14 @@ export const clearOldMessages = async () => {
 export const report = async ({ message, reply }: ContextMessageUpdate) => {
   const { id } = message.from
   if (id.toString() !== process.env.ADMIN_ID) {
-    reply('Sorry, only the big boss can use this command.', {
-      reply_to_message_id: message.message_id,
-    })
+    reply('Sorry, only big boss can use this command.')
     return
   }
   const length = await llen()
   reply(`${length} ${length === 1 ? 'message' : 'messages'} cached.`)
 }
 
-export const instructions = ({ message, reply }: ContextMessageUpdate) => {
+export const instructions = ({ reply }: ContextMessageUpdate) => {
   const deleteTimeout = MESSAGE_DELETE_TIMEOUT.asHours()
   const deleteUnit = deleteTimeout === 1 ? 'hour' : 'hours'
   const clearInterval = CLEAR_INTERVAL.asHours()
@@ -100,7 +98,7 @@ export const instructions = ({ message, reply }: ContextMessageUpdate) => {
 
   const commands = {
     help: '',
-    code: 'delete all messages',
+    clear: 'delete all messages',
     shouldi: 'decide between multiple choices',
   }
 
@@ -114,7 +112,18 @@ export const instructions = ({ message, reply }: ContextMessageUpdate) => {
 }
 
 export const decide = ({ message, reply }: ContextMessageUpdate) => {
-  const { text } = message
+  let { text } = message
+
+  while (text.charAt(text.length - 1).match(/[.?! ]/)) {
+    text = text.slice(0, text.length - 1)
+  }
+
+  if (text.split(' ').length === 1) {
+    const random = Math.random() < 0.5
+    if (random) return reply('Yes, do it!')
+    else return reply("No, don't do it...")
+  }
+
   const choices = text
     .split(' ')
     .reduce(
@@ -130,16 +139,12 @@ export const decide = ({ message, reply }: ContextMessageUpdate) => {
       [[]]
     )
     .map(sentence => sentence.join(' '))
-    
-  if (choices.length === 0) return reply(
-    `Sorry, I didn't understand your message. State the choices clearly with <code>or</code> in between.`
-  )
 
   if (choices.length === 1) {
-    const decision = Math.random() < 0.5 ? 'Yes, I think you should' : 'No, you shouldn\'t'
-    return reply (`${decision} ${choices[0]}.`)
+    const decision =
+      Math.random() < 0.5 ? 'Yes, I think you should' : "No, you shouldn't"
+    return reply(`${decision} ${choices[0]}.`)
   }
-
 
   const suggestion = choices[Math.floor(Math.random() * choices.length)]
   return reply(`I think you should ${suggestion}!`)

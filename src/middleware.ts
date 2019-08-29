@@ -1,5 +1,5 @@
 import moment from 'moment'
-import  { Composer, ContextMessageUpdate } from 'telegraf'
+import { Composer, ContextMessageUpdate } from 'telegraf'
 import { cache } from '.'
 
 export const rpush = (
@@ -10,7 +10,10 @@ export const rpush = (
   cache.rpush('store', [message_id, chat_id, timestamp].join(','))
 }
 
-const recordMiddleware = ({ message, chat }: ContextMessageUpdate, next: Function) => {
+const recordMiddleware = (
+  { message, chat }: ContextMessageUpdate,
+  next: Function
+) => {
   rpush(message.message_id, chat.id)
   next()
 }
@@ -23,7 +26,7 @@ const replyMiddleware = (ctx: ContextMessageUpdate, next: Function) => {
     reply_to_message_id: message.message_id,
   }
 
-  ctx.reply = <any> async function(text: string) {
+  ctx.reply = <any>async function(text: string) {
     try {
       const reply = await originalReply(text, options)
       if (reply == null) return
@@ -31,9 +34,12 @@ const replyMiddleware = (ctx: ContextMessageUpdate, next: Function) => {
       rpush(message_id, chat.id)
     } catch (e) {
       console.log(`Error: ${e}`)
-    } 
+    }
   }
   next()
 }
 
-export const messageMiddleware = Composer.compose([recordMiddleware, replyMiddleware])
+export const messageMiddleware = Composer.compose([
+  recordMiddleware,
+  replyMiddleware,
+])

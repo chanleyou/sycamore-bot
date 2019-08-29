@@ -28,6 +28,8 @@ bot.start(instructions)
 bot.help(instructions)
 bot.launch()
 
+clearOldMessages()
+
 setInterval(clearOldMessages, CLEAR_INTERVAL.asMilliseconds())
 
 console.log('~~~ Initialized ~~~')
