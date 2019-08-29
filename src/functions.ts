@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { Context } from './types'
+import { Context, ContextMessageUpdate } from 'telegraf'
 import { cache, telegram } from '.'
 import { MESSAGE_DELETE_TIMEOUT, CLEAR_INTERVAL } from './constants'
 
@@ -80,7 +80,7 @@ export const clearOldMessages = async () => {
   }
 }
 
-export const report = async ({ message, reply }: Context) => {
+export const report = async ({ message, reply }: ContextMessageUpdate) => {
   const { id } = message.from
   if (id.toString() !== process.env.ADMIN_ID) {
     reply('Sorry, only the big boss can use this command.', {
@@ -92,7 +92,7 @@ export const report = async ({ message, reply }: Context) => {
   reply(`${length} ${length === 1 ? 'message' : 'messages'} cached.`)
 }
 
-export const instructions = ({ message, reply }: Context) => {
+export const instructions = ({ message, reply }: ContextMessageUpdate) => {
   const deleteTimeout = MESSAGE_DELETE_TIMEOUT.asHours()
   const deleteUnit = deleteTimeout === 1 ? 'hour' : 'hours'
   const clearInterval = CLEAR_INTERVAL.asHours()
@@ -113,7 +113,7 @@ export const instructions = ({ message, reply }: Context) => {
   )
 }
 
-export const decide = ({ message, reply }: Context) => {
+export const decide = ({ message, reply }: ContextMessageUpdate) => {
   const { text } = message
   const choices = text
     .split(' ')
