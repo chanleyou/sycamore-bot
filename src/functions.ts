@@ -130,12 +130,16 @@ export const decide = ({ message, reply }: ContextMessageUpdate) => {
       [[]]
     )
     .map(sentence => sentence.join(' '))
+    
+  if (choices.length === 0) return reply(
+    `Sorry, I didn't understand your message. State the choices clearly with <code>or</code> in between.`
+  )
 
-  if (choices.length < 2) {
-    return reply(
-      `Sorry, I didn't understand your message. State the choices clearly with <code>or</code> in between.`
-    )
+  if (choices.length === 1) {
+    const decision = Math.random() < 0.5 ? 'Yes, I think you should' : 'No, you shouldn\'t'
+    return reply (`${decision} ${choices[0]}.`)
   }
+
 
   const suggestion = choices[Math.floor(Math.random() * choices.length)]
   return reply(`I think you should ${suggestion}!`)
