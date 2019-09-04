@@ -10,6 +10,7 @@ import {
   report,
   instructions,
   decide,
+  badBot,
 } from './functions'
 
 if (process.env.NODE_ENV === 'development') dotenv.config()
@@ -24,6 +25,7 @@ bot.on('message', messageMiddleware)
 bot.command('clear', clearChatMessages)
 bot.command('report', report)
 bot.command('shouldi', decide)
+bot.command('badbot', badBot)
 bot.start(instructions)
 bot.help(instructions)
 bot.launch()
