@@ -11,6 +11,7 @@ import {
   instructions,
   decide,
   badBot,
+  goodBot,
 } from './functions'
 
 if (process.env.NODE_ENV === 'development') dotenv.config()
@@ -26,6 +27,7 @@ bot.command('clear', clearChatMessages)
 bot.command('report', report)
 bot.command('shouldi', decide)
 bot.command('badbot', badBot)
+bot.command('goodbot', goodBot)
 bot.start(instructions)
 bot.help(instructions)
 bot.launch()

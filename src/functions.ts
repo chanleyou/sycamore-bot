@@ -156,3 +156,10 @@ export const badBot = ({ message, reply }: ContextMessageUpdate) => {
     `😭 UwU I'm sowwy ${first_name}... I've been a bad bot please punish me UwU 😭`
   )
 }
+
+export const goodBot = ({ message, reply }: ContextMessageUpdate) => {
+  const { first_name} = message.from;
+  reply(
+    `😊 Thanks ${first_name}! 😊`
+  )
+}
