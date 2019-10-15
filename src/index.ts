@@ -3,7 +3,15 @@ import redis from 'redis'
 import dotenv from 'dotenv'
 import { CLEAR_INTERVAL } from './constants'
 import { messageMiddleware } from './middleware'
-import { clearChatMessages, clearOldMessages, report, instructions, decide } from './functions'
+import {
+  clearChatMessages,
+  clearOldMessages,
+  report,
+  instructions,
+  decide,
+  badBot,
+  goodBot,
+} from './functions'
 
 if (process.env.NODE_ENV === 'development') dotenv.config()
 
@@ -17,6 +25,8 @@ bot.on('message', messageMiddleware)
 bot.command('clear', clearChatMessages)
 bot.command('report', report)
 bot.command('shouldi', decide)
+bot.command('badbot', badBot)
+bot.command('goodbot', goodBot)
 bot.start(instructions)
 bot.help(instructions)
 bot.launch()
