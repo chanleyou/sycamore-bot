@@ -31,10 +31,7 @@ export const lpop = (): Promise<string> => {
   })
 }
 
-export const lrange = (
-  start: number = 0,
-  end: number = -1
-): Promise<string[]> => {
+export const lrange = (start: number = 0, end: number = -1): Promise<string[]> => {
   return new Promise((resolve, reject) => {
     cache.lrange('store', start, end, (e, messages) => {
       if (e) return reject(e)
@@ -43,7 +40,7 @@ export const lrange = (
   })
 }
 
-const deleteMessage = (chat_id: string | number, message_id: string | number) =>
+const deleteMessage = (chat_id: string | number, message_id: number) =>
   telegram.deleteMessage(chat_id, message_id).catch(console.log)
 
 export const clearChatMessages = async (ctx: Context) => {
@@ -75,7 +72,7 @@ export const clearOldMessages = async () => {
       cache.lpush('store', message)
       return
     }
-    deleteMessage(chat_id, message_id)
+    deleteMessage(chat_id, parseInt(message_id))
     message = await lpop()
   }
 }
@@ -107,16 +104,13 @@ export const instructions = ({ reply }: ContextMessageUpdate) => {
     .join('\n')
 
   reply(
-    `Hello! Sycamore Bot automatically deletes messages older than ${deleteTimeout} ${deleteUnit} every ${clearInterval} ${clearUnit}.\n\n<b>Commands:</b>\n${commandsMarkdown}`
+    `Hello! Sycamore Bot automatically deletes messages older than ${deleteTimeout} ${deleteUnit} every ${clearInterval} ${clearUnit}.\n\n<b>Commands:</b>\n${commandsMarkdown}`,
   )
 }
 
 export const decide = ({ message, reply }: ContextMessageUpdate) => {
   let { text } = message
-
-  while (text.charAt(text.length - 1).match(/[.?! ]/)) {
-    text = text.slice(0, text.length - 1)
-  }
+  while (text.match(/[.?! ]$/)) text = text.slice(0, text.length - 1)
 
   if (text.split(' ').length === 1) {
     const random = Math.random() < 0.5
@@ -136,13 +130,12 @@ export const decide = ({ message, reply }: ContextMessageUpdate) => {
           return clone
         }
       },
-      [[]]
+      [[]],
     )
     .map(sentence => sentence.join(' '))
 
   if (choices.length === 1) {
-    const decision =
-      Math.random() < 0.5 ? 'Yes, I think you should' : "No, you shouldn't"
+    const decision = Math.random() < 0.5 ? 'Yes, I think you should' : "No, you shouldn't"
     return reply(`${decision} ${choices[0]}.`)
   }
 
