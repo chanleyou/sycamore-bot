@@ -30,6 +30,7 @@ const replyMiddleware = (ctx: ContextMessageUpdate, next: Function) => {
 
 const commandsMiddleware = (ctx: ContextMessageUpdate): void => {
   const { text } = ctx.message
+  if (text[0] !== '/') return
   const command = text.split(' ')[0].slice(1)
 
   if (isCommand(command)) commands[command](ctx)
