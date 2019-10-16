@@ -2,7 +2,7 @@
 import moment from 'moment'
 import { ContextMessageUpdate } from 'telegraf'
 import { telegram } from '.'
-import { lrem, lpush, lrange, lpop, llen } from './cache'
+import { lrem, lrange, llen } from './cache'
 import { MESSAGE_DELETE_TIMEOUT, CLEAR_INTERVAL } from './constants'
 
 const commands = {
@@ -51,26 +51,24 @@ async function clearChatMessages(ctx: ContextMessageUpdate) {
 
 export async function clearOldMessages() {
   const now = moment()
-  let message = await lpop()
 
-  while (message != null) {
+  const messages = await lrange()
+
+  messages.forEach(async message => {
     const [message_id, chat_id, timestamp] = message.split(',')
     if (
       moment(timestamp)
         .add(MESSAGE_DELETE_TIMEOUT)
         .isSameOrAfter(now)
     ) {
-      lpush(message)
-      return
+      try {
+        await deleteMessage(chat_id, parseInt(message_id, 10))
+        lrem(message)
+      } catch (e) {
+        console.log(e)
+      }
     }
-    try {
-      await deleteMessage(chat_id, parseInt(message_id, 10))
-    } catch (e) {
-      console.log(e)
-      lpush(message)
-    }
-    message = await lpop()
-  }
+  })
 }
 
 async function report({ message, reply }: ContextMessageUpdate) {
