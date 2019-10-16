@@ -1,4 +1,5 @@
 import { Composer, ContextMessageUpdate } from 'telegraf'
+import commands, { isCommand } from './commands'
 import { rpush } from './cache'
 
 const recordMiddleware = ({ message, chat }: ContextMessageUpdate, next: Function) => {
@@ -27,6 +28,17 @@ const replyMiddleware = (ctx: ContextMessageUpdate, next: Function) => {
   next()
 }
 
-export const messageMiddleware = Composer.compose([recordMiddleware, replyMiddleware])
+const commandsMiddleware = (ctx: ContextMessageUpdate): void => {
+  const { text } = ctx.message
+  const command = text.split(' ')[0].slice(1)
 
-export default messageMiddleware
+  if (isCommand(command)) commands[command](ctx)
+  else {
+    const { reply } = ctx
+    reply('Unknown command. Type /help to see a list of valid commands.')
+  }
+}
+
+export const middleware = Composer.compose([recordMiddleware, replyMiddleware, commandsMiddleware])
+
+export default middleware
