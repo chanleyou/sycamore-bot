@@ -27,9 +27,9 @@
     "start": "set \"NODE_ENV=development\" && nodemon",
     "dev": "set \"NODE_ENV=development\" && nodemon",
     "prod": "set \"NODE_ENV=production\" && node dist/index.js",
-    "heroku-postbuild": "tsc",
-    "prettier": "prettier *.json src/*.ts",
-    "lint": "eslint src/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "prettier": "prettier *.json src/**/*.ts",
+    "heroku-postbuild": "tsc"
   },
   "author": "",
   "license": "ISC"
