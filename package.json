@@ -17,14 +17,19 @@
     "eslint": "^6.2.2",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.18.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.6.4"
   },
   "scripts": {
-    "start": "set \"NODE_ENV=production\" && node dist/index.js",
+    "start": "set \"NODE_ENV=development\" && nodemon",
     "dev": "set \"NODE_ENV=development\" && nodemon",
-    "postinstall": "tsc"
+    "prod": "set \"NODE_ENV=production\" && node dist/index.js",
+    "postinstall": "tsc",
+    "prettier": "prettier *.json src/*.ts",
+    "lint": "eslint src/*.ts"
   },
   "author": "",
   "license": "ISC"
