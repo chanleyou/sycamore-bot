@@ -61,6 +61,8 @@ export const instructions = ({ reply }: ContextMessageUpdate) => {
     help: '',
     clear: 'delete all messages',
     shouldi: 'decide between multiple choices',
+    goodbot: '',
+    badbot: '',
   }
 
   const commandsMarkdown = Object.entries(commands)
