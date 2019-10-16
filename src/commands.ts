@@ -1,4 +1,4 @@
-/* eslint @typescript-eslint/no-use-before-define: 0 */
+/* eslint @typescript-eslint/no-use-before-define: 0, no-await-in-loop: 0 */
 import moment from 'moment'
 import { ContextMessageUpdate } from 'telegraf'
 import { telegram } from '.'
@@ -15,8 +15,20 @@ const commands = {
   report,
 }
 
-const deleteMessage = (chat_id: string | number, message_id: number) =>
-  telegram.deleteMessage(chat_id, message_id).catch(console.log)
+const deleteMessage = (chat_id: string | number, message_id: number) => {
+  return new Promise((resolve, reject) => {
+    telegram
+      .deleteMessage(chat_id, message_id)
+      .then(resolve)
+      .catch(e => {
+        const { error_code, description } = e.response
+        if (error_code === 400 && description === 'Bad Request: message to delete not found') {
+          resolve()
+        }
+        reject(e)
+      })
+  })
+}
 
 async function clearChatMessages(ctx: ContextMessageUpdate) {
   const { chat } = ctx
@@ -51,8 +63,13 @@ export async function clearOldMessages() {
       lpush(message)
       return
     }
-    deleteMessage(chat_id, parseInt(message_id, 10))
-    message = await lpop() // eslint-disable-line no-await-in-loop
+    try {
+      await deleteMessage(chat_id, parseInt(message_id, 10))
+    } catch (e) {
+      console.log(e)
+      lpush(message)
+    }
+    message = await lpop()
   }
 }
 
