@@ -27,7 +27,7 @@
     "start": "set \"NODE_ENV=development\" && nodemon",
     "dev": "set \"NODE_ENV=development\" && nodemon",
     "prod": "set \"NODE_ENV=production\" && node dist/index.js",
-    "preprod": "tsc",
+    "heroku-postbuild": "tsc",
     "prettier": "prettier *.json src/*.ts",
     "lint": "eslint src/*.ts"
   },
