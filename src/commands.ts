@@ -59,7 +59,7 @@ export async function clearOldMessages() {
     if (
       moment(timestamp)
         .add(MESSAGE_DELETE_TIMEOUT)
-        .isSameOrAfter(now)
+        .isSameOrBefore(now)
     ) {
       try {
         await deleteMessage(chat_id, parseInt(message_id, 10))
